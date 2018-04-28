@@ -85,7 +85,6 @@ __interrupt void cpu_timer0_isr(void);
 
 #ifdef FLASH
 // Used for running BackGround in flash, and ISR in RAM
-//extern uint16_t *RamfuncsLoadStart, *RamfuncsLoadEnd, *RamfuncsRunStart;
 
 
 #ifdef CSM_ENABLE
@@ -136,11 +135,10 @@ void main(void)
   // Only used if running from FLASH
   // Note that the variable FLASH is defined by the project
   #ifdef FLASH
-  // Copy time critical code and Flash setup code to RAM
-  // The RamfuncsLoadStart, RamfuncsLoadEnd, and RamfuncsRunStart
-  // symbols are created by the linker. Refer to the linker files.
-//  memCopy((uint16_t *)&RamfuncsLoadStart,(uint16_t *)&RamfuncsLoadEnd,(uint16_t *)&RamfuncsRunStart);
-//  memcpy(&RamfuncsRunStart, &RamfuncsLoadStart, (size_t)&RamfuncsLoadSize);
+  // WARNING: Always ensure you call memcpy before running any functions from
+  // RAM InitSysCtrl includes a call to a RAM based function and without a
+  // call to memcpy first, the processor will go "into the weeds"
+  memcpy(&RamfuncsRunStart, &RamfuncsLoadStart, (size_t)&RamfuncsLoadSize);
 
   #ifdef CSM_ENABLE
     //copy .econst to unsecure RAM
@@ -237,15 +235,9 @@ void main(void)
 } // end of main() function
 
 
-interrupt void mainISR(void)
-{
-
-
-} // end of mainISR() function
-
 __interrupt void cpu_timer0_isr(void)
 {
-	CpuTimer0.InterruptCount++;
+	//CpuTimer0.InterruptCount++;
 	GpioDataRegs.GPBTOGGLE.bit.GPIO34 = 1;
 	// acknowledge the Timer interrupt
 	PieCtrlRegs.PIEACK.all = PIEACK_GROUP1;
